@@ -1,0 +1,6 @@
+@PetitionService.API_HostAddress = http://localhost:5027
+
+GET {{PetitionService.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

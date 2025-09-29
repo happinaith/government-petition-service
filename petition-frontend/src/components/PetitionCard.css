@@ -1,0 +1,165 @@
+.petition-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  background: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s ease;
+}
+
+.petition-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.petition-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 15px;
+}
+
+.petition-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+  flex: 1;
+  margin-right: 15px;
+}
+
+.petition-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+}
+
+.petition-status {
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.petition-category {
+  background-color: #f8f9fa;
+  color: #495057;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  border: 1px solid #dee2e6;
+}
+
+.petition-description {
+  color: #666;
+  line-height: 1.5;
+  margin-bottom: 15px;
+}
+
+.petition-details {
+  margin-bottom: 15px;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+}
+
+.detail-row {
+  display: flex;
+  margin-bottom: 5px;
+}
+
+.detail-row:last-child {
+  margin-bottom: 0;
+}
+
+.detail-row .label {
+  font-weight: 600;
+  color: #495057;
+  width: 100px;
+  flex-shrink: 0;
+}
+
+.detail-row .value {
+  color: #333;
+}
+
+.petition-signatures {
+  margin-bottom: 15px;
+  text-align: center;
+  padding: 10px;
+  background-color: #e9ecef;
+  border-radius: 6px;
+  color: #495057;
+}
+
+.petition-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background-color: #007bff;
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background-color: #545b62;
+}
+
+@media (max-width: 768px) {
+  .petition-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .petition-meta {
+    align-items: flex-start;
+    flex-direction: row;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  
+  .petition-actions {
+    flex-direction: column;
+  }
+  
+  .detail-row {
+    flex-direction: column;
+  }
+  
+  .detail-row .label {
+    width: auto;
+    margin-bottom: 2px;
+  }
+}
