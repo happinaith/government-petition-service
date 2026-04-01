@@ -16,21 +16,26 @@ const certificateName = "petitionservice.client";
 const certFilePath = path.join(baseFolder, `${certificateName}.pem`);
 const keyFilePath = path.join(baseFolder, `${certificateName}.key`);
 
-if (!fs.existsSync(baseFolder)) {
-    fs.mkdirSync(baseFolder, { recursive: true });
-}
+// Флаг: в Docker (или продакшене) сертификаты не создаём
+const useHttps = env.NODE_ENV !== 'production' && !env.DOCKER;
 
-if (!fs.existsSync(certFilePath) || !fs.existsSync(keyFilePath)) {
-    if (0 !== child_process.spawnSync('dotnet', [
-        'dev-certs',
-        'https',
-        '--export-path',
-        certFilePath,
-        '--format',
-        'Pem',
-        '--no-password',
-    ], { stdio: 'inherit', }).status) {
-        throw new Error("Could not create certificate.");
+if (useHttps) {
+    if (!fs.existsSync(baseFolder)) {
+        fs.mkdirSync(baseFolder, { recursive: true });
+    }
+
+    if (!fs.existsSync(certFilePath) || !fs.existsSync(keyFilePath)) {
+        if (0 !== child_process.spawnSync('dotnet', [
+            'dev-certs',
+            'https',
+            '--export-path',
+            certFilePath,
+            '--format',
+            'Pem',
+            '--no-password',
+        ], { stdio: 'inherit', }).status) {
+            throw new Error("Could not create certificate.");
+        }
     }
 }
 
@@ -53,9 +58,9 @@ export default defineConfig({
             '^/api': { target, secure: false }
         },
         port: parseInt(env.DEV_SERVER_PORT || '51892'),
-        https: {
+        https: useHttps ? {
             key: fs.readFileSync(keyFilePath),
             cert: fs.readFileSync(certFilePath),
-        }
+        } : undefined
     }
-})
+});

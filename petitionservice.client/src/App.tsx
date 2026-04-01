@@ -1,136 +1,160 @@
 import { useEffect, useState } from 'react';
+import { Link, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import './App.css';
+import { AuthPage } from './pages/AuthPage';
+import { PetitionsPage } from './pages/PetitionsPage';
+import { ProfilePage } from './pages/ProfilePage';
+import { PetitionDetailsPage } from './pages/PetitionDetailsPage';
+import { AdminPage } from './pages/AdminPage';
 
-interface Petition {
-    id: number;
-    title: string;
-    content: string;
-    category?: string;
-    createdAt: string;
-    author: string;
-    signatures: number;
+interface AuthResponse {
+    username: string;
+    isAdmin: boolean;
 }
 
-interface AuthResponse { token: string; username: string; }
-
 function App() {
-    const [petitions, setPetitions] = useState<Petition[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
-    const [token, setToken] = useState<string | null>(() => localStorage.getItem('jwt'));
-    const [newTitle, setNewTitle] = useState('');
-    const [newContent, setNewContent] = useState('');
-    const [error, setError] = useState<string | null>(null);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [username, setUsername] = useState<string | null>(null);
+    const [isAdmin, setIsAdmin] = useState(false);
+    const navigate = useNavigate();
+    const location = useLocation();
 
-    useEffect(() => { fetchPetitions(); }, []);
+    function clearUserState() {
+        setIsAuthenticated(false);
+        setUsername(null);
+        setIsAdmin(false);
+    }
 
-    async function fetchPetitions() {
-        setLoading(true);
+    function applyAuthSuccess(data: AuthResponse) {
+        setIsAuthenticated(true);
+        setUsername(data.username);
+        setIsAdmin(data.isAdmin);
+    }
+
+    async function refreshAccessToken(): Promise<boolean> {
         try {
-            const resp = await fetch('/api/petitions');
-            if (resp.ok) {
-                const data = await resp.json();
-                setPetitions(data);
+            const resp = await fetch('/api/auth/refresh', {
+                method: 'POST'
+            });
+
+            if (!resp.ok) {
+                clearUserState();
+                return false;
             }
-        } catch (e) {
-            console.error(e);
-        } finally { setLoading(false); }
+
+            const data: AuthResponse = await resp.json();
+            applyAuthSuccess(data);
+            return true;
+        } catch {
+            return false;
+        }
     }
 
-    async function register() {
-        setError(null);
-        const resp = await fetch('/api/auth/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
-        });
-        if (!resp.ok) { setError('Регистрация не удалась'); return; }
-        const data: AuthResponse = await resp.json();
-        setToken(data.token); localStorage.setItem('jwt', data.token);
+    async function loadCurrentUser() {
+        const meResponse = await fetch('/api/auth/me');
+
+        if (meResponse.ok) {
+            const meData = await meResponse.json();
+            if (meData?.username) {
+                setIsAuthenticated(true);
+                setUsername(meData.username);
+                setIsAdmin(!!meData.isAdmin);
+            }
+            return;
+        }
+
+        if (meResponse.status !== 401) {
+            clearUserState();
+            return;
+        }
+
+        const refreshed = await refreshAccessToken();
+        if (!refreshed) {
+            clearUserState();
+            return;
+        }
+
+        const retryResponse = await fetch('/api/auth/me');
+        if (retryResponse.ok) {
+            const retryData = await retryResponse.json();
+            if (retryData?.username) {
+                setIsAuthenticated(true);
+                setUsername(retryData.username);
+                setIsAdmin(!!retryData.isAdmin);
+                return;
+            }
+        }
+
+        clearUserState();
     }
 
-    async function login() {
-        setError(null);
-        const resp = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
-        });
-        if (!resp.ok) { setError('Логин не удался'); return; }
-        const data: AuthResponse = await resp.json();
-        setToken(data.token); localStorage.setItem('jwt', data.token);
+    useEffect(() => {
+        void loadCurrentUser();
+    }, []);
+
+    function handleAuthSuccess(data: AuthResponse) {
+        applyAuthSuccess(data);
+        navigate('/profile');
     }
 
-    function logout() { setToken(null); localStorage.removeItem('jwt'); }
+    async function logout() {
+        try {
+            await fetch('/api/auth/logout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ allDevices: false })
+            });
+        } catch {
+            // Ignore network failures during logout and clear local state anyway.
+        }
 
-    async function createPetition() {
-        if (!token) return;
-        const resp = await fetch('/api/petitions', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ title: newTitle, content: newContent })
-        });
-        if (resp.ok) { setNewTitle(''); setNewContent(''); fetchPetitions(); }
+        clearUserState();
+        navigate('/auth');
     }
 
-    async function sign(id: number) {
-        const resp = await fetch(`/api/petitions/${id}/sign`, { method: 'POST' });
-        if (resp.ok) fetchPetitions();
-    }
+    const isAuthPage = location.pathname.startsWith('/auth');
 
     return (
-        <div>
-            <h1>Правительственные петиции</h1>
-            {!token && (
-                <div style={{ border: '1px solid #444', padding: '1rem', marginBottom: '1rem' }}>
-                    <h2>Вход или регистрация</h2>
-                    <input placeholder='Имя пользователя' value={username} onChange={e => setUsername(e.target.value)} />{' '}
-                    <input placeholder='Пароль' type='password' value={password} onChange={e => setPassword(e.target.value)} />{' '}
-                    <button onClick={login}>Войти</button>{' '}
-                    <button onClick={register}>Зарегистрироваться</button>
-                    {error && <p style={{ color: 'red' }}>{error}</p>}
-                </div>
+        <div className="app-root">
+            {!isAuthPage && (
+                <header className="app-header">
+                    <div className="app-header-left">
+                        <h1>РЎРµСЂРІРёСЃ РїРµС‚РёС†РёР№</h1>
+                        <nav>
+                            <Link to="/petitions">РџРµС‚РёС†РёРё</Link>
+                            {isAuthenticated && <Link to="/profile">РњРѕР№ РїСЂРѕС„РёР»СЊ</Link>}
+                            {isAuthenticated && isAdmin && <Link to="/admin">РђРґРјРёРЅ</Link>}
+                        </nav>
+                    </div>
+                    <div className="app-header-right">
+                        {isAuthenticated && (
+                            <>
+                                <span>Р’С‹ РІРѕС€Р»Рё РєР°Рє {username ?? 'РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ'}</span>
+                                <button onClick={logout}>Р’С‹Р№С‚Рё</button>
+                            </>
+                        )}
+                        {!isAuthenticated && !isAuthPage && (
+                            <Link to="/auth">Р’РѕР№С‚Рё</Link>
+                        )}
+                    </div>
+                </header>
             )}
-            {token && (
-                <div style={{ marginBottom: '1rem' }}>
-                    <span>Вы вошли как {username || 'пользователь'}</span>{' '}
-                    <button onClick={logout}>Выйти</button>
-                </div>
-            )}
-            {token && (
-                <div style={{ border: '1px solid #444', padding: '1rem', marginBottom: '1rem' }}>
-                    <h2>Создать петицию</h2>
-                    <input placeholder='Заголовок' value={newTitle} onChange={e => setNewTitle(e.target.value)} />{' '}
-                    <textarea placeholder='Текст' value={newContent} onChange={e => setNewContent(e.target.value)} />{' '}
-                    <button onClick={createPetition}>Отправить</button>
-                </div>
-            )}
-            <h2>Список петиций</h2>
-            {loading ? <p>Загрузка...</p> : (
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Заголовок</th>
-                            <th>Автор</th>
-                            <th>Категория</th>
-                            <th>Подписей</th>
-                            <th>Действия</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {petitions.map(p => (
-                            <tr key={p.id}>
-                                <td>{p.title}</td>
-                                <td>{p.author}</td>
-                                <td>{p.category || '-'}</td>
-                                <td>{p.signatures}</td>
-                                <td><button onClick={() => sign(p.id)}>Подписать</button></td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            )}
+
+            <main className="app-main">
+                <Routes>
+                    <Route path="/auth" element={<AuthPage onAuthSuccess={handleAuthSuccess} />} />
+                    <Route path="/petitions" element={<PetitionsPage/>} />
+                    <Route path="/petitions/:id" element={<PetitionDetailsPage />} />
+                    <Route path="/profile" element={<ProfilePage username={username} />} />
+                    <Route path="/admin" element={isAuthenticated && isAdmin ? <AdminPage /> : <AuthPage onAuthSuccess={handleAuthSuccess} />} />
+                    <Route
+                        path="/"
+                        element={isAuthenticated ? <PetitionsPage/> : <AuthPage onAuthSuccess={handleAuthSuccess} />}
+                    />
+                </Routes>
+            </main>
         </div>
     );
 }

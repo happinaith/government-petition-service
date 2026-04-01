@@ -1,11 +1,187 @@
-﻿#root {
-    max-width: 1280px;
+﻿.app-root {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1.5rem;
+    background: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.app-header-left h1 {
+    margin: 0;
+    font-size: 1.4rem;
+}
+
+.app-header-left {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.app-header-left nav {
+    display: flex;
+    gap: 1rem;
+}
+
+.app-header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.95rem;
+}
+
+.app-main {
+    flex: 1;
+    padding: 1.5rem;
+    max-width: 960px;
     margin: 0 auto;
-    padding: 2rem;
+}
+
+.page h2 {
+    margin-top: 0;
+}
+
+.auth-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at top, #e5edff, #f3f4f6);
+}
+
+.auth-card {
+    background: #ffffff;
+    padding: 2rem 2.5rem;
+    border-radius: 1rem;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.12);
+    width: 100%;
+    max-width: 420px;
+}
+
+.auth-card h1 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-size: 1.6rem;
     text-align: center;
 }
 
-th, td {
-    padding-left: 1rem;
-    padding-right: 1rem;
+.auth-toggle {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+    background: #f3f4f6;
+    padding: 0.25rem;
+    border-radius: 999px;
+}
+
+.auth-toggle button {
+    flex: 1;
+    background: transparent;
+    color: #4b5563;
+    border-radius: 999px;
+    border: none;
+}
+
+.auth-toggle button.active {
+    background: #2563eb;
+    color: #ffffff;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.auth-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.9rem;
+    color: #374151;
+}
+
+input,
+textarea {
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    border: 1px solid #d1d5db;
+    font: inherit;
+}
+
+textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.error-text {
+    color: #b91c1c;
+    font-size: 0.9rem;
+}
+
+.petitions-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #ffffff;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+.petitions-table th,
+.petitions-table td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.petitions-table th {
+    background: #f9fafb;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6b7280;
+}
+
+.petitions-table tr:last-child td {
+    border-bottom: none;
+}
+
+.card {
+    background: #ffffff;
+    padding: 1.25rem 1.5rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+    margin-bottom: 1.5rem;
+}
+
+.form-vertical {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.petitions-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.petitions-list li {
+    background: #ffffff;
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    border: 1px solid #e5e7eb;
 }

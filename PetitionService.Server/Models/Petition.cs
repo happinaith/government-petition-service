@@ -9,4 +9,5 @@ public class Petition
  public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
  public string Author { get; set; } = string.Empty;
  public int Signatures { get; set; } =0;
+ public string Status { get; set; } = "Новая";
 }

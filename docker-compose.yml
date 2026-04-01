@@ -1,0 +1,29 @@
+version: '3.9'
+
+services:
+  server:
+    build:
+      context: ./PetitionService.Server
+      dockerfile: Dockerfile
+    container_name: petition-server
+    ports:
+      - "51892:8080"
+    environment:
+      ASPNETCORE_URLS: http://0.0.0.0:8080
+      ASPNETCORE_ENVIRONMENT: Development
+    volumes:
+      # Монтируем папку для БД, а не файл
+      - db-data:/app/data
+
+  client:
+    build:
+      context: ./petitionservice.client
+      dockerfile: Dockerfile
+    container_name: petition-client
+    ports:
+      - "5173:80"
+    depends_on:
+      - server
+
+volumes:
+  db-data:
