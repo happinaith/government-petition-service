@@ -73,7 +73,6 @@ describe('AuthProvider', () => {
   });
 
   it('clears the session when refresh fails during an expired request', async () => {
-    let petitionCallCount = 0;
     const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
       const method = init?.method ?? 'GET';
@@ -83,7 +82,6 @@ describe('AuthProvider', () => {
       }
 
       if (url === '/api/petitions' && method === 'GET') {
-        petitionCallCount += 1;
         return new Response('', { status: 401 });
       }
 
@@ -93,7 +91,6 @@ describe('AuthProvider', () => {
 
       throw new Error(`Unexpected request: ${method} ${url}`);
     });
-
     vi.stubGlobal('fetch', fetchMock);
 
     render(

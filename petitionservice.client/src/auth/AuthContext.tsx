@@ -1,27 +1,7 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type PropsWithChildren,
-  type ReactElement,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type PropsWithChildren, type ReactElement } from "react";
+import { AuthContext } from "./authContext";
+import type { AuthContextValue } from "./authContext";
 import type { AuthResponse, AuthSession } from "./types";
-
-interface AuthContextValue {
-  session: AuthSession | null;
-  isAuthenticated: boolean;
-  login: (username: string, password: string) => Promise<void>;
-  register: (username: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  hasRole: (role: string) => boolean;
-  authFetch: (input: RequestInfo | URL, init?: RequestInit, requireAuth?: boolean) => Promise<Response>;
-}
-
-const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 function toSession(response: AuthResponse): AuthSession {
   return {
@@ -211,13 +191,4 @@ export function AuthProvider({ children }: PropsWithChildren): ReactElement {
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth(): AuthContextValue {
-  const ctx = useContext(AuthContext);
-  if (!ctx) {
-    throw new Error("useAuth должен использоваться внутри AuthProvider");
-  }
-
-  return ctx;
 }

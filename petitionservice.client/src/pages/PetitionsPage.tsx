@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { ReactElement } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useAuth } from "../auth/AuthContext";
+import { useAuth } from "../auth/useAuth";
 import { ROUTES } from "../routing/routes";
 import { SeoHead } from "../seo/SeoHead";
 import { readApiError, toRoleLabel, validatePetitionPayload, type PetitionPayload } from "./petitionHelpers";
@@ -100,7 +100,7 @@ export function PetitionsPage(): ReactElement {
     setSearchParams(next);
   };
 
-  async function fetchPetitions(forceRefresh = false): Promise<void> {
+  const fetchPetitions = useCallback(async (forceRefresh = false): Promise<void> => {
     const cacheKey = searchQueryString || "__default__";
     if (!forceRefresh) {
       const cached = petitionsCacheRef.current.get(cacheKey);
@@ -131,11 +131,11 @@ export function PetitionsPage(): ReactElement {
     } finally {
       setLoading(false);
     }
-  }
+  }, [authFetch, searchQueryString]);
 
   useEffect(() => {
     void fetchPetitions();
-  }, [authFetch, searchQueryString]);
+  }, [fetchPetitions]);
 
   const applyDraftFilters = (): void => {
     updateParams(
