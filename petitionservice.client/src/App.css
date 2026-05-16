@@ -1,11 +1,163 @@
 ﻿#root {
-    max-width: 1280px;
+    max-width: 980px;
     margin: 0 auto;
-    padding: 2rem;
-    text-align: center;
+    padding: 2rem 1rem;
 }
 
-th, td {
-    padding-left: 1rem;
-    padding-right: 1rem;
+main {
+    display: grid;
+    gap: 1rem;
+}
+
+.auth-card,
+.card {
+    background: #ffffff;
+    border: 1px solid #dce3f2;
+    border-radius: 12px;
+    padding: 1rem;
+}
+
+.auth-card {
+    max-width: 480px;
+    margin: 4rem auto;
+}
+
+form {
+    display: grid;
+    gap: 0.75rem;
+}
+
+input,
+textarea {
+    width: 100%;
+    border: 1px solid #c7d0e4;
+    border-radius: 8px;
+    padding: 0.6rem 0.75rem;
+    background: #fff;
+}
+
+textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+button {
+    border: 1px solid #3e5ddf;
+    border-radius: 8px;
+    background: #3e5ddf;
+    color: #fff;
+    padding: 0.5rem 0.8rem;
+    cursor: pointer;
+}
+
+button:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.filters-grid {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    align-items: end;
+}
+
+.pagination-row {
+    margin-top: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+.error {
+    color: #b42318;
+}
+
+.success {
+    color: #147d42;
+}
+
+.details-card {
+    margin-top: 0.75rem;
+}
+
+.table-shell {
+    min-height: 280px;
+}
+
+.loading-state {
+    min-height: 1.5rem;
+    color: #1f4b9d;
+}
+
+.attachment-upload {
+    margin-top: 0.75rem;
+    display: grid;
+    gap: 0.5rem;
+}
+
+.upload-status {
+    color: #1f4b9d;
+    font-weight: 600;
+}
+
+.ai-assist-panel {
+    border: 1px dashed #c7d0e4;
+    border-radius: 10px;
+    padding: 0.75rem;
+    background: #fafcff;
+}
+
+.ai-assist-panel h3 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+}
+
+.ai-assist-result {
+    display: grid;
+    gap: 0.35rem;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    text-align: left;
+    border-bottom: 1px solid #edf1fb;
+    padding: 0.5rem;
+}
+
+td button {
+    margin-right: 0.4rem;
+}
+
+@media (max-width: 640px) {
+    .toolbar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .actions {
+        width: 100%;
+    }
+
+    .actions button {
+        flex: 1;
+    }
 }

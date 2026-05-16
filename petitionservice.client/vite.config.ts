@@ -1,6 +1,6 @@
 import { fileURLToPath, URL } from 'node:url';
 
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 import plugin from '@vitejs/plugin-react';
 import fs from 'fs';
 import path from 'path';
@@ -43,6 +43,13 @@ export default defineConfig({
         alias: {
             '@': fileURLToPath(new URL('./src', import.meta.url))
         }
+    },
+    test: {
+        environment: 'jsdom',
+        setupFiles: ['./src/test/setup.ts'],
+        css: true,
+        clearMocks: true,
+        restoreMocks: true,
     },
     server: {
         proxy: {

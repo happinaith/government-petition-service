@@ -12,4 +12,5 @@ public class AppDbContext : IdentityDbContext<IdentityUser>
  }
 
  public DbSet<Petition> Petitions => Set<Petition>();
+ public DbSet<PetitionAttachment> PetitionAttachments => Set<PetitionAttachment>();
 }
