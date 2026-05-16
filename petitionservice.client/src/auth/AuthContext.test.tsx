@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
-import { AuthProvider, useAuth } from './AuthContext';
+import { AuthProvider } from './AuthContext';
+import { useAuth } from './useAuth';
 
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {

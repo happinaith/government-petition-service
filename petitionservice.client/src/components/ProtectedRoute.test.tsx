@@ -10,7 +10,7 @@ type AuthState = {
 
 const useAuthMock = vi.fn();
 
-vi.mock('../auth/AuthContext', () => ({
+vi.mock('../auth/useAuth', () => ({
   useAuth: () => useAuthMock(),
 }));
 

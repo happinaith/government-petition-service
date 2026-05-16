@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type PropsWithChildren, type ReactElement } from "react";
-import { AuthContext } from "./authContext";
-import type { AuthContextValue } from "./authContext";
+import { AuthContext } from "./authContextValue";
+import type { AuthContextValue } from "./authContextValue";
 import type { AuthResponse, AuthSession } from "./types";
 
 function toSession(response: AuthResponse): AuthSession {
