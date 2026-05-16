@@ -1,0 +1,53 @@
+name: Deploy
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    name: Deploy to target
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare SSH key
+        env:
+          DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+        run: |
+          if [ -z "$DEPLOY_SSH_PRIVATE_KEY" ]; then
+            echo "No DEPLOY_SSH_PRIVATE_KEY provided, skipping key preparation"
+          else
+            printf '%s\n' "$DEPLOY_SSH_PRIVATE_KEY" > private_key
+            chmod 600 private_key
+            echo "Private key written"
+          fi
+
+      - name: Deploy via SSH
+        env:
+          DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          if [ -z "$DEPLOY_SSH_PRIVATE_KEY" ]; then
+            echo "No DEPLOY_SSH_PRIVATE_KEY provided, skipping deploy"
+            exit 0
+          fi
+
+          printf '%s\n' "$DEPLOY_SSH_PRIVATE_KEY" > private_key
+          chmod 600 private_key
+
+          ssh -o StrictHostKeyChecking=no -i private_key $DEPLOY_USER@$DEPLOY_HOST << 'EOF'
+          set -e
+          cd "$DEPLOY_PATH"
+          git fetch --all
+          git reset --hard origin/main
+          docker-compose pull || true
+          docker-compose up -d --build
+          EOF
+        shell: bash
+
+    # Note: This job requires repository secrets to be configured:
+    # DEPLOY_SSH_PRIVATE_KEY, DEPLOY_USER, DEPLOY_HOST, DEPLOY_PATH

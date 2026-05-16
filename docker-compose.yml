@@ -1,3 +1,7 @@
+version: '2.4'
+env_file:
+  - .env
+
 services:
   minio:
     image: quay.io/minio/minio:latest
@@ -12,11 +16,80 @@ services:
     command: server /data --console-address ":9001"
     volumes:
       - minio_data:/data
+    networks:
+      - petition_network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 10s
       timeout: 5s
       retries: 5
 
+  backend:
+    build:
+      context: .
+      dockerfile: PetitionService.Server/Dockerfile
+    image: petition-backend:latest
+    restart: unless-stopped
+    ports:
+      - "5000:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+      ConnectionStrings__Default: ${CONNECTIONSTRINGS__DEFAULT:-"Data Source=/data/petitions.db"}
+      ObjectStorage__Provider: ${OBJECTSTORAGE__PROVIDER:-Minio}
+      ObjectStorage__Minio__Endpoint: http://minio:9000
+      ObjectStorage__Minio__AccessKey: ${MINIO_ROOT_USER:-minioadmin}
+      ObjectStorage__Minio__SecretKey: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    volumes:
+      - petitions_db:/data
+    networks:
+      - petition_network
+    depends_on:
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  frontend:
+    image: node:20
+    container_name: petition-frontend
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ./petitionservice.client:/app:cached
+    ports:
+      - "5173:5173"
+    networks:
+      - petition_network
+    command: sh -c "npm ci --silent && npm run dev -- --host 0.0.0.0"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5173/" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  nginx:
+    image: petition-nginx:latest
+    build:
+      context: deploy/nginx
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    networks:
+      - petition_network
+    depends_on:
+      backend:
+        condition: service_healthy
+
 volumes:
   minio_data:
+  petitions_db:
+
+networks:
+  petition_network:
+    driver: bridge

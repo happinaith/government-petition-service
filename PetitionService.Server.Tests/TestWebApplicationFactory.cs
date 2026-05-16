@@ -2,15 +2,22 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using PetitionService.Server.AI;
 using PetitionService.Server.Storage;
-using System.Collections.Concurrent;
 
 namespace PetitionService.Server.Tests;
 
-public class TestWebApplicationFactory : WebApplicationFactory<Program>
+public sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
 {
     private readonly string _dbPath = Path.Combine(Path.GetTempPath(), $"petition-tests-{Guid.NewGuid():N}.db");
     private readonly string _storagePath = Path.Combine(Path.GetTempPath(), $"petition-storage-tests-{Guid.NewGuid():N}");
+    private readonly TestObjectStorage _objectStorage = new();
+    private readonly TestGeminiPetitionAssistant _geminiAssistant = new();
+
+    public TestObjectStorage ObjectStorage => _objectStorage;
+
+    public TestGeminiPetitionAssistant GeminiAssistant => _geminiAssistant;
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -23,8 +30,11 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
                 ["Jwt:AccessTokenTtlMinutes"] = "1",
                 ["Jwt:RefreshTokenTtlDays"] = "1",
                 ["Auth:AdminBootstrapToken"] = "test-bootstrap-token",
-                ["ObjectStorage:Provider"] = "Local",
-                ["ObjectStorage:RootPath"] = _storagePath
+                ["Gemini:ApiKey"] = "test-api-key",
+                ["ObjectStorage:Provider"] = "Testing",
+                ["ObjectStorage:RootPath"] = _storagePath,
+                ["ObjectStorage:MaxFileSizeBytes"] = "5242880",
+                ["ObjectStorage:PreSignedUrlTtlMinutes"] = "5"
             };
 
             configBuilder.AddInMemoryCollection(overrides);
@@ -32,52 +42,51 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
 
         builder.ConfigureServices(services =>
         {
-            services.AddSingleton<IObjectStorage, InMemoryObjectStorage>();
+            services.RemoveAll<IObjectStorage>();
+            services.AddSingleton<IObjectStorage>(_objectStorage);
+
+            services.RemoveAll<IGeminiPetitionAssistant>();
+            services.AddSingleton<IGeminiPetitionAssistant>(_geminiAssistant);
         });
     }
 
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);
+        _objectStorage.Dispose();
+        TryDeleteDirectory(_storagePath);
+        TryDeleteFile(_dbPath);
     }
 
-    private sealed class InMemoryObjectStorage : IObjectStorage
+    private static void TryDeleteFile(string path)
     {
-        private readonly ConcurrentDictionary<string, byte[]> _objects = new(StringComparer.OrdinalIgnoreCase);
-
-        public Task SaveAsync(string key, Stream stream, CancellationToken cancellationToken = default)
+        if (!File.Exists(path))
         {
-            using var memory = new MemoryStream();
-            stream.CopyTo(memory);
-            _objects[key] = memory.ToArray();
-            return Task.CompletedTask;
+            return;
         }
 
-        public Task<Stream?> OpenReadAsync(string key, CancellationToken cancellationToken = default)
+        try
         {
-            if (!_objects.TryGetValue(key, out var bytes))
-            {
-                return Task.FromResult<Stream?>(null);
-            }
+            File.Delete(path);
+        }
+        catch
+        {
+        }
+    }
 
-            Stream stream = new MemoryStream(bytes, writable: false);
-            return Task.FromResult<Stream?>(stream);
+    private static void TryDeleteDirectory(string path)
+    {
+        if (!Directory.Exists(path))
+        {
+            return;
         }
 
-        public Task DeleteIfExistsAsync(string key, CancellationToken cancellationToken = default)
+        try
         {
-            _objects.TryRemove(key, out _);
-            return Task.CompletedTask;
+            Directory.Delete(path, recursive: true);
         }
-
-        public Task<string?> CreatePreSignedDownloadUrlAsync(
-            string key,
-            string fileName,
-            TimeSpan ttl,
-            bool asAttachment = true,
-            CancellationToken cancellationToken = default)
+        catch
         {
-            return Task.FromResult<string?>(null);
         }
     }
 }
