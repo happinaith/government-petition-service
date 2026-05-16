@@ -6,10 +6,6 @@ on:
   pull_request:
     branches: [ main, develop ]
 
-env:
-  REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
-  REGISTRY_USER: ${{ secrets.DOCKER_USERNAME }}
-
 jobs:
   lint-and-test:
     name: Lint and Test
@@ -62,6 +58,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: lint-and-test
     if: github.event_name == 'push'
+    env:
+      REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
+      IMAGE_NAMESPACE: ${{ secrets.DOCKER_NAMESPACE || secrets.DOCKER_USERNAME }}
     steps:
       - uses: actions/checkout@v4
 
@@ -74,20 +73,20 @@ jobs:
       - name: Login to registry
         uses: docker/login-action@v2
         with:
-          registry: ${{ secrets.DOCKER_REGISTRY }}
+          registry: ${{ env.REGISTRY }}
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build and push backend image
         run: |
-          IMAGE=${{ secrets.DOCKER_REGISTRY }}/${{ github.repository_owner }}/petition-backend:$(echo $GITHUB_SHA | cut -c1-8)
+          IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/petition-backend:$(echo $GITHUB_SHA | cut -c1-8)
           docker build -t $IMAGE -f PetitionService.Server/Dockerfile .
           docker push $IMAGE
         shell: bash
 
       - name: Build and push frontend image
         run: |
-          IMAGE=${{ secrets.DOCKER_REGISTRY }}/${{ github.repository_owner }}/petition-frontend:$(echo $GITHUB_SHA | cut -c1-8)
+          IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/petition-frontend:$(echo $GITHUB_SHA | cut -c1-8)
           docker build -t $IMAGE -f petitionservice.client/Dockerfile.prod ./petitionservice.client
           docker push $IMAGE
         shell: bash
