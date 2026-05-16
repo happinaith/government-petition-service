@@ -1,37 +1,37 @@
 # government-petition-service
-University project for people to send petitions to the government with ability to filter it according to themes or topics.
+Университетский проект, позволяющий людям направлять петиции правительству с возможностью фильтрации по темам или категориям.
 
-## Gemini API Integration (MVP)
+## Интеграция с Gemini API (MVP)
 
-Scenario:
-- AI-assisted petition drafting in the create form.
-- User enters a rough draft, and the backend asks Gemini to suggest a normalized title, content, and category.
+Сценарий:
+- Помощь ИИ при составлении петиции в форме создания.
+- Пользователь вводит черновой вариант, а бэкенд запрашивает у Gemini предложения по нормализованному заголовку, содержанию и категории.
 
-Configuration:
-- Set environment variable `Gemini__ApiKey` with your Google Gemini API key.
-- Optional config (in `PetitionService.Server/appsettings.json` under `Gemini`):
+Настройка:
+- Задайте переменную окружения `Gemini__ApiKey` с вашим ключом API Google Gemini.
+- Дополнительные параметры (в `PetitionService.Server/appsettings.json` в разделе `Gemini`):
 	- `Model`
 	- `TimeoutSeconds`
 	- `MaxRetries`
 
-Server endpoint:
+Эндпоинт сервера:
 - `POST /api/petitions/ai-draft`
-- Requires authenticated user role (`User` or `Admin`).
-- Rate limited (fixed window) to protect the external API.
+- Требуется аутентифицированный пользователь с ролью (`User` или `Admin`).
+- Ограничение частоты запросов (фиксированное окно) для защиты внешнего API.
 
-## Run MinIO with Docker Compose
+## Запуск MinIO с помощью Docker Compose
 
-1. Copy env template:
+1. Скопируйте шаблон переменных окружения:
 	- `copy .env.example .env` (Windows)
-2. Start MinIO:
+2. Запустите MinIO:
 	- `docker compose up -d`
-3. Open MinIO Console:
+3. Откройте консоль MinIO:
 	- `http://localhost:9001`
-4. Login with values from `.env`.
+4. Войдите, используя значения из `.env`.
 
-Current backend settings expect MinIO at:
-- Endpoint: `http://localhost:9000`
-- Bucket: `petition-attachments`
+Текущие настройки бэкенда ожидают MinIO по адресу:
+- Эндпоинт: `http://localhost:9000`
+- Бакет: `petition-attachments`
 
-Stop MinIO:
+Остановка MinIO:
 - `docker compose down`

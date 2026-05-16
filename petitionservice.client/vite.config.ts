@@ -2,11 +2,47 @@ import { fileURLToPath, URL } from 'node:url';
 
 import { defineConfig } from 'vitest/config';
 import plugin from '@vitejs/plugin-react';
+import child_process from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { env } from 'process';
 
 const target = env["services__petitionservice-server__https__0"] ?? 'https://localhost:7174';
+const isVitestRun = process.argv.some((argument) => argument.includes('vitest'));
+
+function ensureDevelopmentCertificate() {
+    const baseFolder =
+        env.APPDATA !== undefined && env.APPDATA !== ''
+            ? `${env.APPDATA}/ASP.NET/https`
+            : `${env.HOME}/.aspnet/https`;
+
+    const certificateName = 'petitionservice.client';
+    const certFilePath = path.join(baseFolder, `${certificateName}.pem`);
+    const keyFilePath = path.join(baseFolder, `${certificateName}.key`);
+
+    if (!fs.existsSync(baseFolder)) {
+        fs.mkdirSync(baseFolder, { recursive: true });
+    }
+
+    if (!fs.existsSync(certFilePath) || !fs.existsSync(keyFilePath)) {
+        if (0 !== child_process.spawnSync('dotnet', [
+            'dev-certs',
+            'https',
+            '--export-path',
+            certFilePath,
+            '--format',
+            'Pem',
+            '--no-password',
+        ], { stdio: 'inherit' }).status) {
+            throw new Error('Could not create certificate.');
+        }
+    }
+
+    return {
+        certFilePath,
+        keyFilePath,
+    };
+}
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command }) => {
@@ -26,26 +62,11 @@ export default defineConfig(({ command }) => {
         },
     };
 
-    if (command !== 'serve') {
+    if (command !== 'serve' || isVitestRun) {
         return config;
     }
 
-    const baseFolder =
-        env.APPDATA !== undefined && env.APPDATA !== ''
-            ? `${env.APPDATA}/ASP.NET/https`
-            : `${env.HOME}/.aspnet/https`;
-
-    const certificateName = "petitionservice.client";
-    const certFilePath = path.join(baseFolder, `${certificateName}.pem`);
-    const keyFilePath = path.join(baseFolder, `${certificateName}.key`);
-
-    if (!fs.existsSync(baseFolder)) {
-        fs.mkdirSync(baseFolder, { recursive: true });
-    }
-
-    if (!fs.existsSync(certFilePath) || !fs.existsSync(keyFilePath)) {
-        throw new Error("HTTPS certificate is missing. Run the app in development once to generate it.");
-    }
+    const { certFilePath, keyFilePath } = ensureDevelopmentCertificate();
 
     return {
         ...config,
